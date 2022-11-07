@@ -1,0 +1,65 @@
+07/11/2022
+Procédure de création des fichiers XML Dublin Core de métadonnées pour iPubli
+Produite par Juliette Janes (IST) pour le programme csv2XML.py disponible dans le serveur
+
+
+En entrée:
+
+Créer un csv contenant les métadonnées des fichiers à ajouter dans iPubli:
+	Chaque ligne correspond aux métadonnées d'un fichier et chaque colonne à un type de métadonnées. 
+	Voir le tableau "liste des colonnes" pour créer le csv (type de métadonnées disponibles, nom des colonnes à utiliser, métadonnées obligatoires).
+	Ajouter une colonne "item" qui permet de numéroter chaque ligne à partir de 1.
+	Bien enregistrer le fichier en format csv avec comme caractères de séparation "," 
+
+Organiser le dossier de travail:
+	Dans un dossier vide, ajouter le programme csv2XML.py, les requirements et le csv contenant les métadonnées à traiter.
+	Dans le cas d'un import par lots dans iPubli et si les dossiers sont déjà créés, ajouter les dans le dossier de travail directement
+	les contenant tous
+
+
+Lancement du programme
+Dans Anaconda prompt, naviguer jusqu'au dossier de travail: cd chemin/vers/le/dossier
+
+	Pour une 1ere utilisation: 
+		Créer un environnement virtuel : conda create -n nom_env_virtuel python=3.8
+		Activer l'environnement virtuel : conda activate nom_env_virtuel
+		Installer les librairies : pip3 install -r requirements.txt
+	Par la suite, il est uniquement nécessaire d'activer l'environnement virtuel: conda activate nom_env_virtuel
+
+
+	Pour générer des fichiers dublin core XML sans les intégrer dans des lots: python csv2XML.py NOM_CSV
+	Les fichiers XML seront générés au niveau du programme sous la forme dublincore_numitem.xml
+	
+	Pour générer les fichiers dublin core XML dans des lots: python csv2XML.py NOM_CSV -l
+	Les fichiers XML seront générés directement au sein du lot qui lui correspond. Exemple le fichier dublin core contenant les métadonnées du fichier
+	1 sera ajouté dans le dossier item_1. 
+	Il est possible d'utiliser cette fonctionnalité sans avoir créé à l'avance des dossiers de lots (item). Auquel cas, le programme s'occupera de les 
+	créer lui-même.
+
+	Si les items doivent être triés dans des catégories ou thématiques: 
+	Ajouter une colonne thématique au fichier csv où est noté la catégorie en toutes lettres de chaque fichier.
+	Lancer le programme: python csv2XML.py NOM_CSV -l -t
+	Il est possible d'utiliser cette fonctionnalité sans avoir créé à l'avance des dossiers de lots (item/thématiques). Auquel cas, le programme 
+	s'occupera de les créer lui-même.
+
+
+
+En cas de problèmes:
+Il peut arriver qu’il y ait une erreur et que le programme ne s’exécute pas.
+Auquel cas, se concentrer sur la dernière ligne affichée, commençant par […]Error. Elle indique le plus souvent l’erreur et comment la corriger.  On liste 
+ici plusieurs erreurs qu’il est possible de rencontrer et comment les corriger soi-même rapidement.
+
+	FileNotFoundError : No such file or directory : [FICHIER]
+Dans ce cas, le programme ne trouve pas le fichier/dossier indiqué dans le programme ou dans la ligne de commande. S’il s’agit du csv ou du programme python,
+vérifier que leur nom est bien écrit dans la ligne de commande. 
+
+	The system cannot find the path specified:
+Dans ce cas, vérifier si les thématiques et les items sont bien écrits (surtout celui indiqué suivant la phrase présentée). Il peut s’agir également d’une 
+erreur dans le nom d’un lot préparé, qu’il faut vérifier et corriger.
+
+	Import module : no module named [MODULE]
+Il manque une librairie pour faire fonctionner le programme, faire pip install [Module] et relancer le programme.
+
+	KeyError : Column not found
+La colonne décrite n’a pas été trouvée par le programme. Vérifier que les champs de métadonnées correspondent à ceux présentés en entrée dans ce document. 
+
