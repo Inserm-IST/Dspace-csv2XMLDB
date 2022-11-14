@@ -12,7 +12,7 @@ import click
 import os
 import shutil
 
-def creation_balise_double(case, root_dc, el, qual, lang=False):
+def creation_balise_double(case, root_dc, el, qual, lang=False, conditionnel=False):
     """
     Fonction qui, pour une cellule csv fournie, vérifie si plusieurs informations sont contenus et ajoute en fonction
     les éléments dans des balises correspondantes dans l'arbre xml
@@ -26,30 +26,38 @@ def creation_balise_double(case, root_dc, el, qual, lang=False):
     :type qual: str
     :param lang: valeur de l'attribut language de la balise
     :type lang: str
+    :param conditionnel: booléen pour savoir si
     :return: arbre XML avec le sujet ajouté
     """
-    if "||" in case:
-        # Si oui on divise le contenu de la cellule en une liste de sujets
-        liste_case = case.split("||")
-        for indiv in liste_case:
-            # création d'un élément dans l'arbre XML sous la forme suivante:
-            # <dcvalue element="element fourni" qualifier="qualifier fourni"/>
+    if isinstance(case, float) and not conditionnel:
+        print(
+            "Cette ligne n'a pas toutes ses métadonnées obligatoires de complétées. Vérifiez le csv puis relancez le programme.")
+        print("Le programme s'arrête à cause de la métadonnée " + el)
+        exit()
+    else:
+        if "||" in case:
+            # Si oui on divise le contenu de la cellule en une liste de sujets
+            liste_case = case.split("||")
+            for indiv in liste_case:
+                # création d'un élément dans l'arbre XML sous la forme suivante:
+                # <dcvalue element="element fourni" qualifier="qualifier fourni"/>
+                balise_dc = ET.SubElement(root_dc, "dcvalue", qualifier=qual, element=el)
+                if lang:
+                    # la langue est mentionné, ajout d'un troisième attribut sous la forme language="langue fournie"
+                    balise_dc.attrib["language"] = lang
+                # ajout du contenu de la cellule traitée dans la balise comme texte.
+                balise_dc.text = indiv
+        else:
+            # Si non on créé une unique balise sujet dans laquelle on ajoute tout le contenu de la cellule subject du csv
             balise_dc = ET.SubElement(root_dc, "dcvalue", qualifier=qual, element=el)
             if lang:
-                # la langue est mentionné, ajout d'un troisième attribut sous la forme language="langue fournie"
                 balise_dc.attrib["language"] = lang
-            # ajout du contenu de la cellule traitée dans la balise comme texte.
-            balise_dc.text = indiv
-    else:
-        # Si non on créé une unique balise sujet dans laquelle on ajoute tout le contenu de la cellule subject du csv
-        balise_dc = ET.SubElement(root_dc, "dcvalue", qualifier=qual, element=el)
-        if lang:
-            balise_dc.attrib["language"] = lang
-        balise_dc.text = case
+            balise_dc.text = case
+
     return root_dc
 
 
-def creation_balise_simple(case, root_dc, el, qual, lang=False):
+def creation_balise_simple(case, root_dc, el, qual, lang=False, conditionnel = False):
     """
     fonction qui, pour une cellule csv fournie ajoute le texte contenu dans la balise correspondante dans l'arbre xml
     :param case: cellule du csv
@@ -71,7 +79,14 @@ def creation_balise_simple(case, root_dc, el, qual, lang=False):
         # la langue est mentionné, ajout d'un troisième attribut sous la forme language="langue fournie"
         balise_dc.attrib["language"]=lang
     # ajout du contenu de la cellule traitée dans la balise comme texte.
-    balise_dc.text = case
+    if isinstance(case, float) and not conditionnel:
+        print(
+            "Cette ligne n'a pas toutes ses métadonnées obligatoires de complétées. Vérifiez le csv puis relancez le programme.")
+        print("Le programme s'arrête à cause de la métadonnée " + el)
+        exit()
+    else:
+        balise_dc.text = case
+
     return root_dc
 
 
@@ -95,8 +110,8 @@ def creation_balise_simple_if(colonne, MD_ligne, root_dc, el, qual, lang=False):
         # si la colonne existe, on applique la fonction creation_balise_simple sur les différents éléments récupérés
         # afin d'ajouter son contenu dans l'arbre XML
         root_dc = creation_balise_simple(MD_ligne[colonne], root_dc, el, qual,
-                                            lang)
-    except KeyError:
+                                            lang, conditionnel = True)
+    except (KeyError, TypeError) as e:
         # sinon, il y a une erreur, que l'on passe
         pass
     return root_dc
@@ -122,8 +137,8 @@ def creation_balise_double_if(colonne, MD_ligne, root_dc, el, qual, lang=False):
         # si la colonne existe, on applique la fonction creation_balise_double sur les différents éléments récupérés
         # afin d'ajouter son contenu dans l'arbre XML
         root_dc = creation_balise_double(MD_ligne[colonne], root_dc, el, qual,
-                                            lang)
-    except KeyError:
+                                            lang, conditionnel=True)
+    except (KeyError, TypeError) as e:
         # sinon, il y a une erreur que l'on passe
         pass
     return root_dc
@@ -222,10 +237,10 @@ def csv2db(fichier, creationlots, thematique):
     while n != length_df:
         # récupération de la ligne de métadonnées dans le csv
         MD_fichier = df.loc[n]
-        # création de l'arbre XML qui va contenir les métadonnées du fichier
-        root_dc = create_xml(MD_fichier,root_dc)
         # Information à l'utilisateur du traitement du fichier
         print("Traitement du fichier n° " + str(MD_fichier["item"]))
+        # création de l'arbre XML qui va contenir les métadonnées du fichier
+        root_dc = create_xml(MD_fichier,root_dc)
         # Si l'option dispatchant les xml créés dans les fichiers lots a été sélectionnés, réalisation des opérations
         # suivantes
         if creationlots:
