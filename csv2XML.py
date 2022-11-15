@@ -174,7 +174,7 @@ def create_xml(MD_ligne, root_dc):
                                          "fr")
     root_dc = creation_balise_simple(MD_ligne["Editeur (direction)"], root_dc, "contributor", "editor",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple(MD_ligne['Editeur ("Publisher")'], root_dc, "publisher", "none",MD_ligne["item"], "fr")
-    root_dc = creation_balise_simple(str(MD_ligne["Date de publication"]), root_dc, "date", "issue",MD_ligne["item"], "fr")
+    root_dc = creation_balise_simple(str(MD_ligne["Date de publication"]), root_dc, "date", "issued",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple_if("Date de numérisation",MD_ligne, root_dc, "date", "created",
                                              "fr")
     root_dc = creation_balise_double(MD_ligne["Type"], root_dc, "type", "none", MD_ligne["item"],"fr")
@@ -182,7 +182,7 @@ def create_xml(MD_ligne, root_dc):
     root_dc = creation_balise_simple(MD_ligne["Langage"], root_dc, "language", "iso",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple_if("Relation (isPartOf)", MD_ligne, root_dc, "relation", "ispartof", "fr")
     root_dc = creation_balise_simple_if("Relation (isPartOfSerie)", MD_ligne, root_dc, "relation", "ispartofserie", "fr")
-    root_dc = creation_balise_simple(MD_ligne["Droit"], root_dc, "right", "none",MD_ligne["item"])
+    root_dc = creation_balise_simple(MD_ligne["Droit"], root_dc, "rights", "none",MD_ligne["item"])
     root_dc = creation_balise_simple_if("Gestionnaire des droits", MD_ligne, root_dc, "rightsHolder","none", "fr")
     root_dc = creation_balise_simple_if("Source", MD_ligne, root_dc, "source","none", "fr")
     root_dc = creation_balise_simple_if("Citation information", MD_ligne, root_dc, "identifier", "citation", "fr")
