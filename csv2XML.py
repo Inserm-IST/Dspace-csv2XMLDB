@@ -12,7 +12,7 @@ import click
 import os
 import shutil
 
-def creation_balise_double(case, root_dc, el, qual, lang=False, conditionnel=False):
+def creation_balise_double(case, root_dc, el, qual, num_item, lang=False, conditionnel=False):
     """
     Fonction qui, pour une cellule csv fournie, vérifie si plusieurs informations sont contenus et ajoute en fonction
     les éléments dans des balises correspondantes dans l'arbre xml
@@ -30,10 +30,9 @@ def creation_balise_double(case, root_dc, el, qual, lang=False, conditionnel=Fal
     :return: arbre XML avec le sujet ajouté
     """
     if isinstance(case, float) and not conditionnel:
-        print(
-            "Cette ligne n'a pas toutes ses métadonnées obligatoires de complétées. Vérifiez le csv puis relancez le programme.")
-        print("Le programme s'arrête à cause de la métadonnée " + el)
-        exit()
+        print("Cette ligne n'a pas toutes ses métadonnées obligatoires de complétées.")
+        with open('anomalies.txt', 'a') as f:
+            f.write("ligne: " + str(num_item) + " métadonnée manquante: " + el+"\n")
     else:
         if "||" in case:
             # Si oui on divise le contenu de la cellule en une liste de sujets
@@ -57,7 +56,7 @@ def creation_balise_double(case, root_dc, el, qual, lang=False, conditionnel=Fal
     return root_dc
 
 
-def creation_balise_simple(case, root_dc, el, qual, lang=False, conditionnel = False):
+def creation_balise_simple(case, root_dc, el, qual, num_item, lang=False, conditionnel = False):
     """
     fonction qui, pour une cellule csv fournie ajoute le texte contenu dans la balise correspondante dans l'arbre xml
     :param case: cellule du csv
@@ -80,10 +79,9 @@ def creation_balise_simple(case, root_dc, el, qual, lang=False, conditionnel = F
         balise_dc.attrib["language"]=lang
     # ajout du contenu de la cellule traitée dans la balise comme texte.
     if isinstance(case, float) and not conditionnel:
-        print(
-            "Cette ligne n'a pas toutes ses métadonnées obligatoires de complétées. Vérifiez le csv puis relancez le programme.")
-        print("Le programme s'arrête à cause de la métadonnée " + el)
-        exit()
+        print("Cette ligne n'a pas toutes ses métadonnées obligatoires de complétées.")
+        with open('anomalies.txt', 'a') as f:
+            f.write("ligne: "+str(num_item)+" métadonnée manquante: " + el +"\n" )
     else:
         balise_dc.text = case
 
@@ -107,9 +105,10 @@ def creation_balise_simple_if(colonne, MD_ligne, root_dc, el, qual, lang=False):
     :return: arbre XML avec le sujet ajouté
     """
     try:
+        num = MD_ligne['item']
         # si la colonne existe, on applique la fonction creation_balise_simple sur les différents éléments récupérés
         # afin d'ajouter son contenu dans l'arbre XML
-        root_dc = creation_balise_simple(MD_ligne[colonne], root_dc, el, qual,
+        root_dc = creation_balise_simple(MD_ligne[colonne], root_dc, el, qual, num,
                                             lang, conditionnel = True)
     except (KeyError, TypeError) as e:
         # sinon, il y a une erreur, que l'on passe
@@ -134,9 +133,10 @@ def creation_balise_double_if(colonne, MD_ligne, root_dc, el, qual, lang=False):
     :return: arbre XML avec le sujet ajouté
     """
     try:
+        num = MD_ligne['item']
         # si la colonne existe, on applique la fonction creation_balise_double sur les différents éléments récupérés
         # afin d'ajouter son contenu dans l'arbre XML
-        root_dc = creation_balise_double(MD_ligne[colonne], root_dc, el, qual,
+        root_dc = creation_balise_double(MD_ligne[colonne], root_dc, el, qual, num,
                                             lang, conditionnel=True)
     except (KeyError, TypeError) as e:
         # sinon, il y a une erreur que l'on passe
@@ -154,35 +154,35 @@ def create_xml(MD_ligne, root_dc):
     root_dc = ET.Element("dublin_core", page=str(MD_ligne["item"]))
     # appel de la fonction creation_balise_simple pour l'élément titre qui ajoute le contenu de la case titre pour le fichier
     # dans l'arbre xml entre balise
-    root_dc = creation_balise_simple(MD_ligne["Titre"], root_dc, "title", "none", "fr")
+    root_dc = creation_balise_simple(MD_ligne["Titre"], root_dc, "title", "none",MD_ligne["item"], "fr")
     # appel de la fonction creation_balise_simple_if pour l'élément titre alternatif qui vérifie l'existence de cette colonne
     # et, auquel cas, ajoute le contenu de la case dans l'arbre xml
     root_dc = creation_balise_simple_if("Titre alternatif", MD_ligne, root_dc, "title", "alternative", "fr")
     # appel de la fonction creation_balise_double qui pour l'élément auteur, divise les différents éléments entre || qui la composent
     # et créé plusieurs balise auteur contenant chacun de ces textes
-    root_dc = creation_balise_double(MD_ligne["Auteur"], root_dc, "contributor", "author")
+    root_dc = creation_balise_double(MD_ligne["Auteur"], root_dc, "contributor", "author",MD_ligne["item"])
     # appel de la fonction création_balise_double_if qui pour l'élément affiliation, vérifie son existence et, le cas
     # échéant, divise les éléments entre || qui la compose et créé une balise affiliation par texte.
     root_dc = creation_balise_double_if("Affiliation", MD_ligne, root_dc, "contributor", "affiliation")
     # par la suite, appel d'une de ces quatre fonctions en fonction de l'utilisation (optionnelle ou non, multiple ou non)
     # de chaque élément
-    root_dc = creation_balise_double(MD_ligne["Description (fr)"], root_dc, "description", "none", "fr")
+    root_dc = creation_balise_double(MD_ligne["Description (fr)"], root_dc, "description", "none", MD_ligne["item"],"fr")
     root_dc = creation_balise_double_if("Description (en)",MD_ligne, root_dc, "description", "none", "en")
     root_dc = creation_balise_double_if("Table des matières",MD_ligne, root_dc, "description", "tableofcontents",
                                          "fr")
     root_dc = creation_balise_simple_if("Description extrait",MD_ligne, root_dc, "description", "abstract",
                                          "fr")
-    root_dc = creation_balise_simple(MD_ligne["Editeur (direction)"], root_dc, "contributor", "editor", "fr")
-    root_dc = creation_balise_simple(MD_ligne['Editeur ("Publisher")'], root_dc, "contributor", "publisher", "fr")
-    root_dc = creation_balise_simple(str(MD_ligne["Date de publication"]), root_dc, "date", "issue", "fr")
+    root_dc = creation_balise_simple(MD_ligne["Editeur (direction)"], root_dc, "contributor", "editor",MD_ligne["item"], "fr")
+    root_dc = creation_balise_simple(MD_ligne['Editeur ("Publisher")'], root_dc, "contributor", "publisher",MD_ligne["item"], "fr")
+    root_dc = creation_balise_simple(str(MD_ligne["Date de publication"]), root_dc, "date", "issue",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple_if("Date de numérisation",MD_ligne, root_dc, "date", "created",
                                              "fr")
-    root_dc = creation_balise_double(MD_ligne["Type"], root_dc, "type", "none", "fr")
+    root_dc = creation_balise_double(MD_ligne["Type"], root_dc, "type", "none", MD_ligne["item"],"fr")
     root_dc = creation_balise_simple_if("Type (en)",MD_ligne, root_dc, "type", "none", "en")
-    root_dc = creation_balise_simple(MD_ligne["Langage"], root_dc, "language", "iso", "fr")
+    root_dc = creation_balise_simple(MD_ligne["Langage"], root_dc, "language", "iso",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple_if("Relation (isPartOf)", MD_ligne, root_dc, "relation", "ispartof", "fr")
     root_dc = creation_balise_simple_if("Relation (isPartOfSerie)", MD_ligne, root_dc, "relation", "ispartofserie", "fr")
-    root_dc = creation_balise_simple(MD_ligne["Droit"], root_dc, "right", "none")
+    root_dc = creation_balise_simple(MD_ligne["Droit"], root_dc, "right", "none",MD_ligne["item"])
     root_dc = creation_balise_simple_if("Gestionnaire des droits", MD_ligne, root_dc, "rightsHolder","none", "fr")
     root_dc = creation_balise_simple_if("Source", MD_ligne, root_dc, "source","none", "fr")
     root_dc = creation_balise_simple_if("Citation information", MD_ligne, root_dc, "identifier", "citation", "fr")
@@ -201,7 +201,7 @@ def create_lots(MD_fichier, thematique):
     un dossier media (de même pour les sommaires dans un dossier sommaire) en renommant chaque fichier en ajoutant le
     numéro d'item correspondant de telle façon: NOM_FICHIER_numitem.pdf (si pdf)"""
     # récupération du numéro du fichier traité dans la colonne item
-    num_item = str(MD_fichier['item'])
+    num_item = str(int(MD_fichier['item']))
     # si l'utilisateur a coché l'option thématique qui organise les lots en sous catégorie
     if thematique:
         # récupération le nom de la thématique auquel appartient le fichier
@@ -226,6 +226,9 @@ def create_lots(MD_fichier, thematique):
 @click.option("-l", "--lots","creationlots",is_flag=True, default=False, help="creation lots pour import iPubli")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création de lots avec dossier thématique")
 def csv2db(fichier, creationlots, thematique):
+    # creation du fichier anomalies
+    with open('anomalies.txt', 'w') as f:
+        f.write("Métadonnées obligatoires manquantes: \n")
     # lecture du csv et stockage du contenu dans l'objet df
     df = pd.read_csv(fichier)
     # Récupération du nombre de fichiers décrits dans le csv
@@ -250,7 +253,7 @@ def csv2db(fichier, creationlots, thematique):
             nom = nom_dossier+"dublin_core.xml"
         else:
             # sinon, création du nom du fichier xml au niveau du programme avec le numéro d'item dans le nom
-            nom= "dublin_core_"+str(MD_fichier['item'])+".xml"
+            nom= "dublin_core_"+str(int(MD_fichier['item']))+".xml"
         # incrémentation
         n += 1
         # impression de l'arbre XMl dans le fichier correspondant
