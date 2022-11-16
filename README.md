@@ -1,7 +1,8 @@
 # Dspace-csv2XMLDB
 
 Programme python permettant à partir d'un csv contenant des métadonnées dublin core, d'obtenir des fichiers XML conformes au standard de Dspace. <br/>
-Il a été développé pour une préparation facilitée des documents à importer des documents d'[iPubli](https://www.ipubli.inserm.fr/), l'archive ouverte institutionnelle de l'Inserm, gérée par le service de l'Information Scientifique et Technique.
+Il a été développé pour une préparation facilitée des documents à importer des documents d'[iPubli](https://www.ipubli.inserm.fr/), l'archive ouverte institutionnelle de l'Inserm, gérée par le service de l'Information Scientifique et Technique.<br/>
+Le script reste générique et est donc réemployable sur tout autre projet d'import de documents via Batch Import sur un site en Dspace.
 
 ## Guide d'utilisation
 Une procédure est disponible dans le dossier Documentation pour la création du csv à traiter puis le lancement du programme. <br/>
