@@ -7,7 +7,7 @@ Le script reste générique et est donc réemployable sur tout autre projet d'im
 ## Guide d'utilisation
 Une procédure est disponible dans le dossier Documentation pour la création du csv à traiter puis le lancement du programme. <br/>
 Le tableur <i>liste des colonnes</i> décrit les différentes métadonnées disponibles et traitables par le programme.<br/>
-Un exemple de csv traité par le programme est présenté dans le dossier Exemple, avec le fichier XML Dublin Core obtenu en appliquant le programme sur ce document.
+Un exemple de csv traité par le programme est présenté dans le dossier Exemple, avec les fichiers XML Dublin Core obtenu en appliquant le programme sur ce document.
 
 ## Crédits
 Ce projet a été réalisé par le DISC-IST.
