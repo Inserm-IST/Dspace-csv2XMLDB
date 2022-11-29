@@ -174,6 +174,7 @@ def create_xml(MD_ligne, root_dc):
                                          "fr")
     root_dc = creation_balise_simple(MD_ligne["Editeur (direction)"], root_dc, "contributor", "editor",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple(MD_ligne['Editeur ("Publisher")'], root_dc, "publisher", "none",MD_ligne["item"], "fr")
+    root_dc = creation_balise_double_if("Conseillers", root_dc, "contibutor", "advisor", MD_ligne["item"], "fr")
     root_dc = creation_balise_simple(str(MD_ligne["Date de publication"]), root_dc, "date", "issued",MD_ligne["item"], "fr")
     root_dc = creation_balise_simple_if("Date de numérisation",MD_ligne, root_dc, "date", "created",
                                              "fr")
