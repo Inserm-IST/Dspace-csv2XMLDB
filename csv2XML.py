@@ -163,6 +163,7 @@ def create_xml(MD_ligne, root_dc):
     root_dc = creation_balise_double(MD_ligne["Auteur"], root_dc, "contributor", "author",MD_ligne["item"])
     # appel de la fonction création_balise_double_if qui pour l'élément affiliation, vérifie son existence et, le cas
     # échéant, divise les éléments entre || qui la compose et créé une balise affiliation par texte.
+    root_dc = creation_balise_double_if("Conseillers", root_dc, "contibutor", "advisor", MD_ligne["item"], "fr")
     root_dc = creation_balise_double_if("Affiliation", MD_ligne, root_dc, "contributor", "affiliation")
     # par la suite, appel d'une de ces quatre fonctions en fonction de l'utilisation (optionnelle ou non, multiple ou non)
     # de chaque élément
