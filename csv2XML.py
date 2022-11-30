@@ -163,7 +163,7 @@ def create_xml(MD_ligne, root_dc):
     root_dc = creation_balise_double(MD_ligne["Auteur"], root_dc, "contributor", "author",MD_ligne["item"])
     # appel de la fonction création_balise_double_if qui pour l'élément affiliation, vérifie son existence et, le cas
     # échéant, divise les éléments entre || qui la compose et créé une balise affiliation par texte.
-    root_dc = creation_balise_double_if("Conseillers", root_dc, "contibutor", "advisor", MD_ligne["item"], "fr")
+    root_dc = creation_balise_double_if("Conseillers", MD_ligne, root_dc, "contributor", "advisor", "fr")
     root_dc = creation_balise_double_if("Affiliation", MD_ligne, root_dc, "contributor", "affiliation")
     # par la suite, appel d'une de ces quatre fonctions en fonction de l'utilisation (optionnelle ou non, multiple ou non)
     # de chaque élément
@@ -242,7 +242,7 @@ def csv2db(fichier, creationlots, thematique):
         # récupération de la ligne de métadonnées dans le csv
         MD_fichier = df.loc[n]
         # Information à l'utilisateur du traitement du fichier
-        print("Traitement du fichier n° " + str(MD_fichier["item"]))
+        print("Traitement du fichier n° " + str(int(MD_fichier["item"])))
         # création de l'arbre XML qui va contenir les métadonnées du fichier
         root_dc = create_xml(MD_fichier,root_dc)
         # Si l'option dispatchant les xml créés dans les fichiers lots a été sélectionnés, réalisation des opérations
@@ -260,7 +260,7 @@ def csv2db(fichier, creationlots, thematique):
         # impression de l'arbre XMl dans le fichier correspondant
         ET.ElementTree(root_dc).write(nom, encoding="UTF-8", xml_declaration=True)
         # Information à l'utilisateur que le fichier a bien été traité
-        print("Fichier n° " + str(MD_fichier["item"]) + " traité et disponible sous la forme "+ nom)
+        print("Fichier n° " + str(int(MD_fichier["item"])) + " traité et disponible sous la forme "+ nom)
 
 
 if __name__ == "__main__":
