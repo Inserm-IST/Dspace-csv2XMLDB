@@ -11,6 +11,121 @@ from lxml import etree as ET
 import click
 import os
 import shutil
+import re
+import numpy as np
+
+
+def nettoyage_liste(liste):
+    """
+    fonction qui récupère une liste contenant des nan et les supprime. renvoie une liste propre.
+    :param liste: liste des valeurs d'une colonne du csv
+    :type liste: list of strings
+    :return: liste nettoyée sans nan
+    """
+    liste_propre = [x for x in liste if str(x) != 'nan']
+    return liste_propre
+
+
+def get_mois(el):
+    """
+    Fonction qui à partir d'un mois en toute lettres récupère son numéro
+    :param el: mois en lettres
+    :type el: string
+    :return: numéro du mois et nombre de jours dans le mois
+    """
+    dict_mois = {"janvier":"01", "février":"02", "mars":"03","avril":"04","mai":"05","juin":"06","juillet":"07",
+                 "août":"08","septembre":"09","octobre":"10","novembre":"11","décembre":"12"}
+    dict_num_mois = {"01":"31","02":"28","03":"31","04":"30","05":"31","06":"30","07":"31","08":"31","09":"30","10":"31","11":"30","12":"31"}
+    mois_lettres = ''.join(filter(str.isalpha, el))
+    mois = dict_mois[mois_lettres]
+    num_mois = dict_num_mois[mois]
+    return mois,num_mois
+
+
+def get_date(el, liste_date_debut, liste_date_fin):
+    """
+    Fonction qui à partir d'une phrase issue de la cellule source du csv, récupère les dates de début et de fin de la création
+    du document
+    :param el: cellule source du csv pour 1 fichier
+    :type el: str
+    :param liste_date_debut: liste des dates des fichiers traités précédemment (début)
+    :type liste_date_debut: lst of str
+    :param liste_date_fin: liste des dates des fichiers traités précédemment (fin)
+    :type liste_date_fin:lst of str
+    :return: liste_date_fin et liste_date_debut avec l'ajout des dates pour le fichier traité
+    """
+    el = el.replace("Communiqué de presse de l’Institut national de la santé et de la recherche médicale, ", "")
+    el = el.replace("; numérisé sous le format PDF.", "")
+    el = re.sub(", \d{1,2} p", "", el)
+    el = el.replace(',', "")
+    if el[0].isdigit():
+        mois, num_mois = get_mois(el)
+        nombre = int(re.match(r'^\d+', el).group())
+        date = f'{el[-5:-1]}-{mois}-{nombre:02d}T00:00:00'
+        liste_date_debut.append(date)
+        liste_date_fin.append(date)
+    else:
+        mois, num_mois = get_mois(el)
+        date_debut = f'{el[-5:-1]}-{mois}-01T00:00:00'
+        date_fin = f'{el[-5:-1]}-{mois}-{num_mois}T00:00:00'
+        liste_date_debut.append(date_debut)
+        liste_date_fin.append(date_fin)
+    return liste_date_debut, liste_date_fin
+
+
+def create_seda(df):
+    """
+    Fonction qui créé le fichier à importer dans RESIP
+    :param df:
+    :return:
+    """
+    titre_list = df["Titre"].tolist()
+    titre_propre = nettoyage_liste(titre_list)
+    description_archives = df["Description Archives RESIP"].tolist()
+    description_propre = nettoyage_liste(description_archives)
+    file_pdf = df["nom pdf"].tolist()
+    file_propre = nettoyage_liste(file_pdf)
+    source_liste = df["Source"].tolist()
+    source_propre = nettoyage_liste(source_liste)
+    liste_date_debut = []
+    liste_date_fin = []
+    for el in source_propre:
+        liste_date_debut,liste_date_fin=get_date(el,liste_date_debut, liste_date_fin)
+
+    doc_existe = os.path.exists("content")
+    if not doc_existe:
+        os.makedirs("content")
+
+    item_num = 0
+    """liste_file = []
+    for el in file_propre:
+        item_num += 1
+        nouveau_nom = f'content/ID{item_num}.pdf'
+        os.rename(f'PDF/{el}', nouveau_nom)
+        liste_file.append(nouveau_nom)"""
+    liste_file = []
+    for el in file_propre:
+        os.rename(f'PDF/{el}', f'content/{el}')
+        liste_file.append(f'content/{el}')
+
+    file_liste = ["Nom original du fichier: " + x for x in file_propre]
+
+    dict_resultat = {"File": liste_file,
+                     "Content.Title": titre_propre,
+                     "Content.Description": description_propre,
+                     "Content.CustodialHistory.CustodialHistoryItem": file_liste,
+                     "Content.StartDate": liste_date_debut,
+                     "Content.EndDate": liste_date_fin}
+    df_resultat = pd.DataFrame(dict_resultat)
+    df_resultat["Content.DescriptionLevel"] = "Item"
+    df_resultat["Content.DocumentType"] = np.nan
+    df_resultat["Content.Language"] = np.nan
+    df_resultat["Content.AuthorizedAgent.BirthName"] = np.nan
+    df_resultat["Management.AccessRule.Rule"] = np.nan
+    df_resultat["Management.DisseminationRule.Rule"] = np.nan
+    df_resultat["Management.ReuseRule.Rule"] = np.nan
+    return df_resultat
+
 
 def creation_balise_double(case, root_dc, el, qual, num_item, lang=False, conditionnel=False):
     """
@@ -221,12 +336,12 @@ def create_lots(MD_fichier, thematique):
 
 
 
-
 @click.command()
 @click.argument("fichier", type=str)
 @click.option("-l", "--lots","creationlots",is_flag=True, default=False, help="creation lots pour import iPubli")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création de lots avec dossier thématique")
-def csv2db(fichier, creationlots, thematique):
+@click.option("-s",'--seda',"archives",is_flag=True, default=False, help="si création d'un fichier SEDA (Archives)")
+def csv2db(fichier, creationlots, thematique,archives):
     # creation du fichier anomalies
     with open('anomalies.txt', 'w') as f:
         f.write("Métadonnées obligatoires manquantes: \n")
@@ -253,14 +368,21 @@ def csv2db(fichier, creationlots, thematique):
             # création du nom du fichier xml
             nom = nom_dossier+"dublin_core.xml"
         else:
+            doc_existe = os.path.exists("resultat_dbXML")
+            if not doc_existe:
+                os.makedirs("resultat_dbXML")
             # sinon, création du nom du fichier xml au niveau du programme avec le numéro d'item dans le nom
-            nom= "dublin_core_"+str(int(MD_fichier['item']))+".xml"
+            nom= "resultat_dbXML/dublin_core_"+str(int(MD_fichier['item']))+".xml"
         # incrémentation
         n += 1
         # impression de l'arbre XMl dans le fichier correspondant
         ET.ElementTree(root_dc).write(nom, encoding="UTF-8", xml_declaration=True)
         # Information à l'utilisateur que le fichier a bien été traité
         print("Fichier n° " + str(int(MD_fichier["item"])) + " traité et disponible sous la forme "+ nom)
+    if archives:
+        print("Traitement du lot Seda pour les archives")
+        df_resultat = create_seda(df)
+        df_resultat.to_csv('resip_import.csv', index=False, sep=";")
 
 
 if __name__ == "__main__":
