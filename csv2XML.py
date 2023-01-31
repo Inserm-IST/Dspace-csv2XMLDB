@@ -309,8 +309,6 @@ def create_xml(MD_ligne, root_dc):
     return root_dc
 
 
-
-
 def create_lots(MD_fichier, thematique):
     """Fonction qui créé des lots pour import dans iPubli par la suite
     ATTENTION: pour utiliser cette fonction, il faut mettre l'intégralité des documents à ajouter dans les lots dans
@@ -346,7 +344,7 @@ def csv2db(fichier, creationlots, thematique,archives):
     with open('anomalies.txt', 'w') as f:
         f.write("Métadonnées obligatoires manquantes: \n")
     # lecture du csv et stockage du contenu dans l'objet df
-    df = pd.read_csv(fichier)
+    df = pd.read_csv(fichier, sep=",")
     # Récupération du nombre de fichiers décrits dans le csv
     length_df = int(len(df.index))
     # initialisation des objets utilisés dans la boucle suivante
