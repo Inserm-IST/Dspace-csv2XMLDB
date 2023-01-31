@@ -43,8 +43,15 @@ Dans Anaconda prompt, naviguer jusqu'au dossier de travail: cd chemin/vers/le/do
 	s'occupera de les créer lui-même.
 	
 	Si des métadonnées obligatoires manquent dans le csv en entrée, une phrase s'affiche dans le terminal. Le fichier XML Dublin core est tout de même 	   généré par le projet mais la ligne et la métadonnée manquante sont ajoutés dans le fichier anomalies.txt disponible dans le dossier de travail.
-
-
+	
+	Pour générer en plus le lot à importer dans Resip pour les Archives de l'Inserm:
+	Ajouter une colonne "Description Archives RESIP" dans le csv à traiter qui contient la description archivistique de chaque fichier
+	Ajouter une colonne "nom pdf" qui contient le nom du pdf de chaque fichier à traiter
+	Lancer la commande souhaitée en ajoutant l'option -s à la fin exemple: python csv2XML.py NOM_CSV -s ou python csv2XML NOM_CSV -l -s
+	Ouvrir le fichier resip_import.csv et ajouter sur la dernière ligne la description du recordgrp.
+	Ouvrir le fichier resip_import.csv avec notepadd et convertir en ANSI le fichier (en bas à gauche). Enregistrer.
+	Ouvrir RESIP>import>importer depuis un csv de métadonnées et ajouter le document.
+	
 
 En cas de problèmes:
 Il peut arriver qu’il y ait une erreur et que le programme ne s’exécute pas.
