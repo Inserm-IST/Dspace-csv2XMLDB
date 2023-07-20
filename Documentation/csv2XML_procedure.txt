@@ -41,6 +41,7 @@ Dans Anaconda prompt, naviguer jusqu'au dossier de travail: cd chemin/vers/le/do
 	Lancer le programme: python csv2XML.py NOM_CSV -l -t
 	Il est possible d'utiliser cette fonctionnalité sans avoir créé à l'avance des dossiers de lots (item/thématiques). Auquel cas, le programme 
 	s'occupera de les créer lui-même.
+	Même chose avec les dates dans une colonne "Date de publication". Au lieu de "-t", mettre -d dans la commande.
 	
 	Si des métadonnées obligatoires manquent dans le csv en entrée, une phrase s'affiche dans le terminal. Le fichier XML Dublin core est tout de même 	   généré par le projet mais la ligne et la métadonnée manquante sont ajoutés dans le fichier anomalies.txt disponible dans le dossier de travail.
 	
