@@ -309,22 +309,22 @@ def create_xml(MD_ligne, root_dc):
     return root_dc
 
 
-def create_lots(MD_fichier, thematique):
+def create_lots(MD_fichier, thematique, classementdate):
     """Fonction qui créé des lots pour import dans iPubli par la suite
     ATTENTION: pour utiliser cette fonction, il faut mettre l'intégralité des documents à ajouter dans les lots dans
     un dossier media (de même pour les sommaires dans un dossier sommaire) en renommant chaque fichier en ajoutant le
     numéro d'item correspondant de telle façon: NOM_FICHIER_numitem.pdf (si pdf)"""
     # récupération du numéro du fichier traité dans la colonne item
-    num_item = str(int(MD_fichier['item']))
+    num_item = f'{MD_fichier["item"]:04d}'
     # si l'utilisateur a coché l'option thématique qui organise les lots en sous catégorie
     if thematique:
-        # récupération le nom de la thématique auquel appartient le fichier
-        nom_thematique = MD_fichier['Thématique']
         # création du chemin selon la structure thématique/item+numéro/
-        nom_dossier = nom_thematique+"/item_"+num_item+"/"
+        nom_dossier = f'Lots/{MD_fichier["Thématique"]}/item_{num_item}/'
+    elif classementdate:
+        # création du chemin selon la structure date/item+numéro/
+        nom_dossier = f'Lots/{MD_fichier["Date de publication"]}/item_{num_item}/'
     else:
-        # création du chemin selon la structure item+numero/
-        nom_dossier = "item_"+num_item+"/"
+        nom_dossier = f'Lots/item_{num_item}'
     # vérification de l'existance du chemin. Si les dossiers n'existent pas, création.
     doc_existe = os.path.exists(nom_dossier)
     if not doc_existe:
@@ -338,8 +338,9 @@ def create_lots(MD_fichier, thematique):
 @click.argument("fichier", type=str)
 @click.option("-l", "--lots","creationlots",is_flag=True, default=False, help="creation lots pour import iPubli")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création de lots avec dossier thématique")
+@click.option('-d', '--date', 'classementdate', is_flag=True, default=False, help="si création de lots avec dossiers date")
 @click.option("-s",'--seda',"archives",is_flag=True, default=False, help="si création d'un fichier SEDA (Archives)")
-def csv2db(fichier, creationlots, thematique,archives):
+def csv2db(fichier, creationlots, thematique, classementdate, archives):
     # creation du fichier anomalies
     with open('anomalies.txt', 'w') as f:
         f.write("Métadonnées obligatoires manquantes: \n")
@@ -355,14 +356,14 @@ def csv2db(fichier, creationlots, thematique,archives):
         # récupération de la ligne de métadonnées dans le csv
         MD_fichier = df.loc[n]
         # Information à l'utilisateur du traitement du fichier
-        print("Traitement du fichier n° " + str(int(MD_fichier["item"])))
+        print("> Traitement du fichier n° " + str(int(MD_fichier["item"])))
         # création de l'arbre XML qui va contenir les métadonnées du fichier
         root_dc = create_xml(MD_fichier,root_dc)
         # Si l'option dispatchant les xml créés dans les fichiers lots a été sélectionnés, réalisation des opérations
         # suivantes
         if creationlots:
             # création du chemin vers lequel le fichier xml doit être généré
-            nom_dossier = create_lots(MD_fichier, thematique)
+            nom_dossier = create_lots(MD_fichier, thematique,classementdate)
             # création du nom du fichier xml
             nom = nom_dossier+"dublin_core.xml"
         else:
@@ -378,9 +379,10 @@ def csv2db(fichier, creationlots, thematique,archives):
         # Information à l'utilisateur que le fichier a bien été traité
         print("Fichier n° " + str(int(MD_fichier["item"])) + " traité et disponible sous la forme "+ nom)
     if archives:
-        print("Traitement du lot Seda pour les archives")
+        print("> Traitement du lot Seda pour les archives")
         df_resultat = create_seda(df)
         df_resultat.to_csv('resip_import.csv', index=False, sep=";")
+
 
 
 if __name__ == "__main__":
