@@ -326,8 +326,8 @@ def create_lots(MD_fichier, thematique, classementdate):
     else:
         nom_dossier = f'Lots/item_{num_item}'
     # vérification de l'existance du chemin. Si les dossiers n'existent pas, création.
-    doc_existe = os.path.exists(nom_dossier)
-    if not doc_existe:
+    isExist = os.path.exists(nom_dossier)
+    if not isExist:
         os.makedirs(nom_dossier)
     # renvoi du chemin obtenu
     return nom_dossier
@@ -374,6 +374,7 @@ def csv2db(fichier, creationlots, thematique, classementdate, archives):
             nom= "resultat_dbXML/dublin_core_"+str(int(MD_fichier['item']))+".xml"
         # incrémentation
         n += 1
+        print(nom)
         # impression de l'arbre XMl dans le fichier correspondant
         ET.ElementTree(root_dc).write(nom, encoding="UTF-8", xml_declaration=True)
         # Information à l'utilisateur que le fichier a bien été traité
